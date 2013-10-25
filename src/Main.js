@@ -5,7 +5,7 @@ var http = require('http');
 var mysql = require('mysql');
 var util = require('util');
 
-var AddressBook = require('./modules/AddressBook');
-var AddressBookInstance = new AddressBook();
+var DispatcherClass = require('./modules/Dispatcher');
+var Dispatcher = new DispatcherClass();
 
-http.createServer(AddressBookInstance.dispatcher.bind(AddressBookInstance)).listen(3000, 'localhost');
+http.createServer(Dispatcher.dispatch.bind(Dispatcher)).listen(3000, 'localhost');

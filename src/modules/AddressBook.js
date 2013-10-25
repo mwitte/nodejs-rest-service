@@ -1,28 +1,15 @@
 var mysql = require('mysql');
 var util = require('util');
 
-var AddressBook = function(){
-    this.connection = mysql.createConnection({
-        host    : 'localhost',
-        user    : 'node',
-        password: 'node',
-        database: 'node_rest_service'
-    });
-    this.connection.connect();
+var AddressBook = function(connection, successCallback, errorCallback){
+    this.connection = connection;
+    this.success = successCallback;
+    this.error = errorCallback;
 };
 module.exports = AddressBook;
 
-
-AddressBook.prototype.dispatcher = function(request, response){
-    response.setHeader('Content-Type', 'application/json; charset=utf-8');
-
+AddressBook.prototype.dispatch = function(request, response){
     var url = request.url.split('/');
-
-    if(url[1] !== 'addresses'){
-        this.error(response, 404, util.format('%s not found', url[1]));
-        return false;
-    }
-
     switch (request.method){
         case 'GET':
             var id = url.length > 2 ? url[2] : null;
@@ -31,12 +18,6 @@ AddressBook.prototype.dispatcher = function(request, response){
         default:
             this.error(response, 405, 'Method not allowed');
     }
-};
-
-
-AddressBook.prototype.error = function(respsone, code, message){
-    respsone.statusCode = code;
-    respsone.end(util.format('{%s}', message));
 };
 
 AddressBook.prototype.getAddress = function (response, id) {
@@ -48,8 +29,7 @@ AddressBook.prototype.getAddress = function (response, id) {
         if(err) {
             this.error(response, 500, err.code);
         }
-        response.statusCode = 200;
-        response.end(JSON.stringify(processQueryResult(lines)));
+        this.success(response, 200, processQueryResult(lines));
     }.bind(this));
 };
 
