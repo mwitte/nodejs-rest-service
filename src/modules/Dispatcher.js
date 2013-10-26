@@ -1,40 +1,53 @@
 var mysql = require('mysql');
 var util = require('util');
-var AddressBookClass = require('./AddressBook');
+var AddressClass = require('./Address');
+var ConfigClass = require('../config/Config');
+var config = new ConfigClass();
 
 var Dispatcher = function(){
     this.connection = mysql.createConnection({
-        host    : 'localhost',
-        user    : 'node',
-        password: 'node',
-        database: 'node_rest_service'
+        host    : config.database.host,
+        user    : config.database.user,
+        password: config.database.password,
+        database: config.database.name
     });
     this.connection.connect();
 };
 module.exports = Dispatcher;
 
-
+/**
+ * Dispatches the different entities
+ * @param request
+ * @param response
+ */
 Dispatcher.prototype.dispatch = function(request, response){
     response.setHeader('Content-Type', 'application/json; charset=utf-8');
 
     var url = request.url.split('/');
 
     switch (url[1]){
-        case 'addresses':
-            var addressBook = new AddressBookClass(this.connection, this.success, this.error);
+        case 'address':
+            var addressBook = new AddressClass(this.connection, this.callback);
             addressBook.dispatch(request, response);
             break;
         default:
-            this.error(response, 404, util.format('%s not found', url[1]));
+            response.statusCode = 500;
+            response.end(util.format('{%s}', 'error'));
     }
 };
 
-Dispatcher.prototype.success = function(response, code, data){
-    response.statusCode = code;
-    response.end(JSON.stringify(data));
-};
-
-Dispatcher.prototype.error = function(response, code, message){
-    response.statusCode = code;
-    response.end(util.format('{%s}', message));
+/**
+ * Callback method
+ * @param response
+ * @param data
+ * @param error
+ */
+Dispatcher.prototype.callback = function(response, data, error){
+    if(error){
+        response.statusCode = 500;
+        response.end(util.format('{%s}', 'error'));
+    }else{
+        response.statusCode = 200;
+        response.end(JSON.stringify(data));
+    }
 };
