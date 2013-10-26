@@ -56,13 +56,14 @@ PersistedEntity.prototype.add = function (request, response, callback){
     request.on('data', function(data){
         var values = querystring.parse(data.toString());
         var query = util.format('INSERT INTO  %s SET ?', this.tableName);
+
         this.connection.query(query, values, function(error, result){
 
             if(error) {
                 callback(response, null, error);
             }else{
-                values.id = result.insertId;
-                callback(response, values, null);
+                var result = 'http://' + request.headers.host + '/' + this.tableName + '/' + result.insertId;
+                callback(response, [result], null);
             }
         }.bind(this));
     }.bind(this));
@@ -75,10 +76,12 @@ PersistedEntity.prototype.add = function (request, response, callback){
  * @param callback
  */
 PersistedEntity.prototype.update = function (request, response, callback){
+    var url = request.url.split('/');
+    var id = url.length > 2 ? url[2] : null;
     request.on('data', function(data){
         var values = querystring.parse(data.toString());
         var query = util.format('UPDATE %s SET ?', this.tableName);
-        query += util.format(' WHERE id = %d', values.id);
+        query += util.format(' WHERE id = %d', id);
         this.connection.query(query, values, function(error, result){
 
             if(error) {
@@ -97,9 +100,11 @@ PersistedEntity.prototype.update = function (request, response, callback){
  * @param callback
  */
 PersistedEntity.prototype.delete = function (request, response, callback){
+    var url = request.url.split('/');
+    var id = url.length > 2 ? url[2] : null;
     request.on('data', function(data){
         var values = querystring.parse(data.toString());
-        var query = util.format('DELETE FROM %s WHERE id = %d', this.tableName, values.id);
+        var query = util.format('DELETE FROM %s WHERE id = %d', this.tableName, id);
         this.connection.query(query, values, function(error, result){
 
             if(error) {

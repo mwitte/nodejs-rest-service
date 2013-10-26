@@ -17,9 +17,9 @@ util.inherits(Address, PersistedEntity);
  */
 Address.prototype.dispatch = function(request, response){
     var url = request.url.split('/');
+    var id = url.length > 2 ? url[2] : null;
     switch (request.method){
         case 'GET':
-            var id = url.length > 2 ? url[2] : null;
             this.getAddress(response, id);
             break;
         case 'POST':
