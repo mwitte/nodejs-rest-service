@@ -4,6 +4,7 @@ var AddressClass = require('./Address');
 var ConfigClass = require('../config/Config');
 var config = new ConfigClass();
 
+
 var Dispatcher = function(){
     this.connection = mysql.createConnection({
         host    : config.database.host,
@@ -27,8 +28,8 @@ Dispatcher.prototype.dispatch = function(request, response){
 
     switch (url[1]){
         case 'address':
-            var addressBook = new AddressClass(this.connection, this.callback);
-            addressBook.dispatch(request, response);
+            var address = new AddressClass(this.connection, this.callback);
+            address.dispatch(request, response);
             break;
         default:
             response.statusCode = 500;

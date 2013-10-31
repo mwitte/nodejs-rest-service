@@ -1,4 +1,8 @@
 var Config = function(){
+    this.webserver = {
+        host: 'localhost',
+        port: 3000
+    };
     this.database = {
         host: 'localhost',
         user: 'node',
