@@ -2,11 +2,42 @@ var mysql = require('mysql');
 var util = require('util');
 var querystring = require('querystring');
 
-var PersistedEntity = function(connection, tableName){
+var PersistedEntity = function(connection, callback, tableName){
     this.connection = connection;
+    this.callback = callback;
     this.tableName = tableName;
 };
 module.exports = PersistedEntity;
+
+/**
+ * Dispatches the different http request methods
+ * @param request
+ * @param response
+ */
+PersistedEntity.prototype.dispatch = function(request, response){
+    switch (request.method){
+        case 'GET':
+            var url = request.url.split('/');
+            var id = url.length > 2 ? url[2] : null;
+            if(id){
+                this.findById(id, response, this.callback);
+            }else{
+                this.findAll(null, response, this.callback);
+            }
+            break;
+        case 'POST':
+            this.add(request, response, this.callback);
+            break;
+        case 'PUT':
+            this.update(request, response, this.callback);
+            break;
+        case 'DELETE':
+            this.delete(request, response, this.callback);
+            break;
+        default:
+            this.callback(response, null, true);
+    }
+};
 
 /**
  * Find specific line
@@ -21,7 +52,7 @@ PersistedEntity.prototype.findById = function (id, response, callback) {
         if(err) {
             callback(response, null, err);
         }else{
-            callback(response, processQueryResult(lines), null);
+            callback(response, processQueryResult(lines)[0], null);
         }
     }.bind(this));
 };
@@ -63,14 +94,14 @@ PersistedEntity.prototype.add = function (request, response, callback){
                 callback(response, null, error);
             }else{
                 var result = 'http://' + request.headers.host + '/' + this.tableName + '/' + result.insertId;
-                callback(response, [result], null);
+                callback(response, {url: result}, null);
             }
         }.bind(this));
     }.bind(this));
 };
 
 /**
- * Updates a line
+ * Updates a line and fill response with new entity data
  * @param request
  * @param response
  * @param callback
@@ -87,7 +118,7 @@ PersistedEntity.prototype.update = function (request, response, callback){
             if(error) {
                 callback(response, null, error);
             }else{
-                callback(response, values, null);
+                this.findById(id, response, callback);
             }
         }.bind(this));
     }.bind(this));
@@ -102,17 +133,13 @@ PersistedEntity.prototype.update = function (request, response, callback){
 PersistedEntity.prototype.delete = function (request, response, callback){
     var url = request.url.split('/');
     var id = url.length > 2 ? url[2] : null;
-    request.on('data', function(data){
-        var values = querystring.parse(data.toString());
-        var query = util.format('DELETE FROM %s WHERE id = %d', this.tableName, id);
-        this.connection.query(query, values, function(error, result){
-
-            if(error) {
-                callback(response, null, error);
-            }else{
-                callback(response, values, null);
-            }
-        }.bind(this));
+    var query = util.format('DELETE FROM %s WHERE id = %d', this.tableName, id);
+    this.connection.query(query, function(error, result){
+        if(error) {
+            callback(response, null, error);
+        }else{
+            callback(response, {}, null);
+        }
     }.bind(this));
 };
 

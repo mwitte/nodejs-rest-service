@@ -2,7 +2,8 @@ Rest Service
 ============
 
 This is a simple rest service based on nodejs. It supports the basic rest methods like GET, POST, PUT and DELETE.
-There are some fixtures in the db directory.
+There is also an example for extending the given PersistedEntity and how to overwrite methods.
+There are some fixtures in the db directory. All you need is [nodejs](http://nodejs.org/) and setup your database.
 
 Build and run
 -------------
@@ -14,18 +15,11 @@ Example requests
 ----------------
 	curl -X POST --data "firstname=Steffi&surname=Huber&street=Salinplatz+7&postcode=83022&city=Rosenheim&country=Deutschland" http://127.0.0.1:3000/address/
 
-	curl -X PUT --data "id=1&surname=Grawer" http://127.0.0.1:3000/address/
+	curl -X PUT --data "surname=Grawer" http://127.0.0.1:3000/address/1
 
-	curl -X GET --data "id=1" http://127.0.0.1:3000/address/
+	curl -X GET http://127.0.0.1:3000/address/1
 
-	curl -X DELETE --data "id=1" http://127.0.0.1:3000/address/
-
-
-Apache Bench
-------------
-	ab -n 1000 -c 100 http://127.0.0.1:3000/address/1
-
-Requests per second: 2317.08 [#/sec] (mean)
+	curl -X DELETE http://127.0.0.1:3000/address/1
 
 
 Licence

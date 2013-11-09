@@ -1,6 +1,7 @@
 var mysql = require('mysql');
 var util = require('util');
-var AddressClass = require('./Address');
+var PersistedEntity = require('./PersistedEntity');
+var SafeEntity = require('./SafeEntity');
 var ConfigClass = require('../config/Config');
 var config = new ConfigClass();
 
@@ -26,14 +27,12 @@ Dispatcher.prototype.dispatch = function(request, response){
 
     var url = request.url.split('/');
 
-    switch (url[1]){
-        case 'address':
-            var address = new AddressClass(this.connection, this.callback);
-            address.dispatch(request, response);
-            break;
-        default:
-            response.statusCode = 500;
-            response.end(util.format('{%s}', 'error'));
+    var entity = this.getMappedEntity(url[1]);
+    if(entity !== null){
+        entity.dispatch(request, response);
+    }else{
+        response.statusCode = 500;
+        response.end(util.format('{%s}', 'error'));
     }
 };
 
@@ -52,3 +51,23 @@ Dispatcher.prototype.callback = function(response, data, error){
         response.end(JSON.stringify(data));
     }
 };
+
+/**
+ * Maps the identifiers to the entities
+ * @param entityIdentifier
+ * @returns {*}
+ */
+Dispatcher.prototype.getMappedEntity = function(entityIdentifier){
+    switch (entityIdentifier){
+        case 'address':
+            var entity = new PersistedEntity(this.connection, this.callback, 'address');
+            break;
+        case 'safe':
+            // cause this is only an example this uses the same table
+            var entity = new SafeEntity(this.connection, this.callback, 'address');
+            break;
+        default:
+            return null;
+    }
+    return entity;
+}
